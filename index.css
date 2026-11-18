@@ -1,0 +1,116 @@
+@import "tailwindcss";
+
+/* The word-box caption font, shipped in fonts/ (same file the export burns with). */
+@font-face {
+  font-family: "Montserrat Black";
+  src: url("/fonts/Montserrat-Black.otf") format("opentype");
+  font-weight: 900;
+  font-display: swap;
+}
+
+@layer base {
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #090d16;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #1e293b;
+    border-radius: 9999px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #334155;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Subtitle animations (preview)
+   ---------------------------------------------------------------------------
+   These mirror the ASS override tags in lib/ass.ts so that what the preview
+   shows is what FFmpeg burns in. Timings are kept identical on purpose:
+   190ms for entrances, 70ms in / 90ms out for the per-word accent.
+
+   Per-word animations are driven entirely by animation-delay rather than by
+   React state, so they stay smooth regardless of how often the player reports
+   its current time. */
+
+@keyframes vc-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes vc-pop-in {
+  0%   { opacity: 0; transform: scale(0.72); }
+  58%  { opacity: 1; transform: scale(1.08); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+@keyframes vc-slide-in {
+  0%   { opacity: 0; transform: translateY(28px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes vc-word-accent {
+  0%   { color: var(--vc-base);      transform: scale(1); }
+  30%  { color: var(--vc-highlight); transform: scale(1.18); }
+  100% { color: var(--vc-base);      transform: scale(1); }
+}
+
+@keyframes vc-word-fill {
+  from { color: var(--vc-base); }
+  to   { color: var(--vc-highlight); }
+}
+
+.vc-anim-fade  { animation: vc-fade-in 120ms ease-out both; }
+.vc-anim-pop   { animation: vc-pop-in 190ms cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+.vc-anim-slide { animation: vc-slide-in 190ms ease-out both; }
+
+/* Colour starts at the resting value so a word is legible before its beat. */
+.vc-word-pop {
+  color: var(--vc-base);
+  animation: vc-word-accent 320ms ease-out both;
+}
+
+/* `forwards` keeps the word highlighted once sung, which is what makes the
+   karaoke fill read as cumulative rather than flashing. */
+.vc-word-karaoke {
+  color: var(--vc-base);
+  animation-name: vc-word-fill;
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
+}
+
+/*
+ * Word-box captions: the spoken word gets the coloured box, only while it is
+ * being said. The animation runs exactly the word's slot (delay = start,
+ * duration = until the next word) and fill-mode none drops the box after,
+ * which is what the ASS events do with their own start and end times.
+ */
+.vc-word-box {
+  color: #ffffff;
+  padding: 0.06em 0.18em;
+  margin: 0 -0.18em;
+  animation-name: vc-word-box;
+  animation-timing-function: step-end;
+  animation-fill-mode: none;
+}
+
+@keyframes vc-word-box {
+  0%,
+  100% {
+    background-color: var(--vc-highlight);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vc-anim-fade,
+  .vc-anim-pop,
+  .vc-anim-slide,
+  .vc-word-pop,
+  .vc-word-karaoke {
+    animation-duration: 1ms;
+    animation-delay: 0ms;
+  }
+}
